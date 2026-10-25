@@ -32,7 +32,10 @@ RUN pnpm i express@4
 # Finalize
 FROM base
 
-COPY http_server.js /var/www/stremio-web
+# ffmpeg is used by the optional audio transcoding layer (TRANSCODER_ENABLED=1)
+RUN apk add --no-cache ffmpeg
+
+COPY http_server.js transcoder.js /var/www/stremio-web
 COPY --from=server /var/www/stremio-web/node_modules /var/www/stremio-web/node_modules
 COPY --from=app /var/www/stremio-web/build /var/www/stremio-web/build
 

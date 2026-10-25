@@ -8,11 +8,19 @@ const HTTP_PORT = 8080;
 
 const express = require('express');
 const path = require('path');
+const { createTranscoder } = require('./transcoder');
 
 const build_path = path.resolve(__dirname, 'build');
 const index_path = path.join(build_path, 'index.html');
 
-express().use(express.static(build_path, {
+const app = express();
+
+// Opt-in audio transcoding layer, see transcoder.js
+if (process.env.TRANSCODER_ENABLED === '1') {
+    app.use(createTranscoder());
+}
+
+app.use(express.static(build_path, {
     setHeaders: (res, path) => {
         if (path === index_path) res.set('cache-control', `public, max-age: ${INDEX_CACHE}`);
         else res.set('cache-control', `public, max-age: ${ASSETS_CACHE}`);

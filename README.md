@@ -72,6 +72,24 @@ docker build -t stremio-web .
 docker run -p 8080:8080 stremio-web
 ```
 
+#### Audio transcoding layer (e.g. for Tesla browsers)
+
+Browsers that can only decode AAC (the Tesla in-car browser is detected automatically, or add `?audioCodecs=aac` to the player URL) can use a built-in transcoder when no streaming server is configured. It copies the video and re-encodes the first audio track to AAC with `ffmpeg`. It is disabled by default:
+
+```bash
+docker run -p 8080:8080 -e TRANSCODER_ENABLED=1 stremio-web
+```
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `TRANSCODER_ENABLED` | off | Set to `1` to enable the layer |
+| `TRANSCODER_MAX_SESSIONS` | `2` | Concurrent transcodes allowed |
+| `TRANSCODER_SESSION_TTL` | `600000` | Idle time (ms) before a session and its temp files are removed |
+| `TRANSCODER_ALLOW_PRIVATE` | off | Set to `1` to allow media URLs on private networks |
+| `TRANSCODER_CORS_ORIGIN` | none | Origin allowed to call the layer cross-origin |
+
+Only direct `http(s)` streams are supported; torrents still need a Stremio streaming server.
+
 ## 🤝 Contributing
 
 Bug reports and pull requests are welcome — [`good first issue`](https://github.com/Stremio/stremio-web/labels/good%20first%20issue) is a great place to start. Want Stremio in your language? Contribute to [stremio-translations](https://github.com/Stremio/stremio-translations). Please read the [Code of Conduct](/CODE_OF_CONDUCT.md) first.

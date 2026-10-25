@@ -36,6 +36,7 @@ const { default: usePlaybackSpeedHold } = require('./usePlaybackSpeedHold');
 const { default: useStatistics } = require('./useStatistics');
 const useVideo = require('./useVideo');
 const getAudioCodecs = require('./getAudioCodecs');
+const useBuiltInTranscoder = require('./useBuiltInTranscoder');
 const { default: useAudio } = require('./useAudio');
 const { default: useSubtitles } = require('./useSubtitles');
 const styles = require('./styles');
@@ -70,6 +71,8 @@ const Player = () => {
     const audioCodecs = React.useMemo(() => {
         return getAudioCodecs(queryParams);
     }, [queryParams]);
+    // Only needed when the audio is restricted and the user has no streaming server of their own
+    const builtInTranscoderUrl = useBuiltInTranscoder(audioCodecs !== null);
     const profile = useProfile();
     const [player, videoParamsChanged, streamStateChanged, audioPreferenceChanged, subtitlePreferenceChanged, videoScaleChanged, timeChanged, seek, pausedChanged, ended, nextVideo] = usePlayer(urlParams);
     const [settings] = useSettings();
@@ -541,7 +544,7 @@ const Player = () => {
         cancelKeyboardSeek();
         video.unload();
 
-        if (player.selected && player.stream?.type === 'Ready' && streamingServer.settings?.type !== 'Loading') {
+        if (player.selected && player.stream?.type === 'Ready' && streamingServer.settings?.type !== 'Loading' && builtInTranscoderUrl !== undefined) {
             video.load({
                 stream: {
                     ...player.stream.content,
@@ -569,14 +572,14 @@ const Player = () => {
                         :
                         streamingServer.selected.transportUrl
                     :
-                    null,
+                    builtInTranscoderUrl,
                 seriesInfo: player.seriesInfo,
             }, {
                 chromecastTransport: services.chromecast.active ? services.chromecast.transport : null,
                 shellTransport: platform.shell.active ? platform.shell : null,
             });
         }
-    }, [streamingServer.baseUrl, player.selected, player.stream, streamSubtitles, forceTranscoding, audioCodecs, casting, cancelKeyboardSeek]);
+    }, [streamingServer.baseUrl, player.selected, player.stream, streamSubtitles, forceTranscoding, audioCodecs, builtInTranscoderUrl, casting, cancelKeyboardSeek]);
 
     React.useEffect(() => {
         !seeking && timeChanged(video.state.time, video.state.duration, video.state.manifest?.name);
